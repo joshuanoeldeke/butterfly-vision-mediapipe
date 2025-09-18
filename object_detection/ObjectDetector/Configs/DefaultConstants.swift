@@ -41,6 +41,7 @@ struct DefaultConstants {
 enum Model: Int, CaseIterable {
   case efficientdetLite0
   case efficientdetLite2
+  case mobilenetssdV2
   
   var name: String {
     switch self {
@@ -48,6 +49,8 @@ enum Model: Int, CaseIterable {
       return "EfficientDet-Lite0"
     case .efficientdetLite2:
       return "EfficientDet-Lite2"
+    case .mobilenetssdV2:
+        return "MobileNet-SSD-V2"
     }
   }
   
@@ -59,6 +62,9 @@ enum Model: Int, CaseIterable {
     case .efficientdetLite2:
       return Bundle.main.path(
         forResource: "efficientdet_lite2", ofType: "tflite")
+    case .mobilenetssdV2:
+        return Bundle.main.path(
+            forResource: "mobilenet_ssd_v2", ofType: "tflite")
     }
   }
   
@@ -68,6 +74,8 @@ enum Model: Int, CaseIterable {
       self.init(rawValue: 0)
     case "EfficientDet-Lite2":
       self.init(rawValue: 1)
+    case "MobileNet-SSD-V2":
+      self.init(rawValue: 2)
     default:
       return nil
     }

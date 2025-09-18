@@ -16,6 +16,7 @@
 		AAF981DD2A80D28B00C7121A /* MediaLibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF981DC2A80D28B00C7121A /* MediaLibraryViewController.swift */; };
 		AAF981DF2A81330700C7121A /* InferenceConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF981DE2A81330700C7121A /* InferenceConfigurationManager.swift */; };
 		AAF981E52A85156500C7121A /* DefaultConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF981E42A85156500C7121A /* DefaultConstants.swift */; };
+		B230D3122E7BFE0900B56555 /* mobilenet_ssd_v2.tflite in Resources */ = {isa = PBXBuildFile; fileRef = B230D3112E7BFE0900B56555 /* mobilenet_ssd_v2.tflite */; };
 		BF2B2D2F2A3C09E200589A11 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2B2D2E2A3C09E200589A11 /* AppDelegate.swift */; };
 		BF2B2D332A3C09E200589A11 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2B2D322A3C09E200589A11 /* RootViewController.swift */; };
 		BF2B2D362A3C09E200589A11 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BF2B2D342A3C09E200589A11 /* Main.storyboard */; };
@@ -50,6 +51,7 @@
 		AAF981DC2A80D28B00C7121A /* MediaLibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaLibraryViewController.swift; sourceTree = "<group>"; };
 		AAF981DE2A81330700C7121A /* InferenceConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceConfigurationManager.swift; sourceTree = "<group>"; };
 		AAF981E42A85156500C7121A /* DefaultConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultConstants.swift; sourceTree = "<group>"; };
+		B230D3112E7BFE0900B56555 /* mobilenet_ssd_v2.tflite */ = {isa = PBXFileReference; lastKnownFileType = file; path = mobilenet_ssd_v2.tflite; sourceTree = "<group>"; };
 		BF2B2D2B2A3C09E200589A11 /* ObjectDetector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ObjectDetector.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF2B2D2E2A3C09E200589A11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BF2B2D322A3C09E200589A11 /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 				BF2B2D392A3C09E300589A11 /* LaunchScreen.storyboard */,
 				BF2B2D3C2A3C09E300589A11 /* Info.plist */,
 				BFCF181E2A405F4300D64FA6 /* efficientdet_lite0.tflite */,
+				B230D3112E7BFE0900B56555 /* mobilenet_ssd_v2.tflite */,
 				BFCF18212A40663700D64FA6 /* efficientdet_lite2.tflite */,
 			);
 			path = ObjectDetector;
@@ -296,6 +299,7 @@
 				BFCF18222A4066C900D64FA6 /* efficientdet_lite2.tflite in Resources */,
 				BF2B2D3B2A3C09E300589A11 /* LaunchScreen.storyboard in Resources */,
 				BF2B2D382A3C09E300589A11 /* Assets.xcassets in Resources */,
+				B230D3122E7BFE0900B56555 /* mobilenet_ssd_v2.tflite in Resources */,
 				BF2B2D362A3C09E200589A11 /* Main.storyboard in Resources */,
 				7F7641A62A74803D00DDCE4E /* download_models.sh in Resources */,
 				BFCF18202A405F4300D64FA6 /* efficientdet_lite0.tflite in Resources */,
