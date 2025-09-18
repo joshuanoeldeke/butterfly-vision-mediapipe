@@ -33,7 +33,7 @@ struct DefaultConstants {
     UIColor.brown
   ]
   static let displayFont = UIFont.systemFont(ofSize: 14.0, weight: .medium)
-  static let model: Model = .efficientdetLite0
+  static let model: Model = .efficientdetLite2
   static let delegate: Delegate = .GPU
 }
 
