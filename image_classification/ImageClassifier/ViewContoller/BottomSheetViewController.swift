@@ -52,6 +52,28 @@ class BottomSheetViewController: UIViewController {
   private let normalCellHeight: CGFloat = 27.0
   private var imageClassifierResult: ImageClassifierResult?
 
+  // Add a mapping here to override how category names from the model are displayed.
+  // Map original model category names (keys) to desired display names (values).
+  // Edit this dictionary to change displayed labels without modifying the .tflite model.
+  // JNO: Manual Override to classify all seperate Butterfly species as "butterfly"
+  private let categoryDisplayNameMap: [String: String] = [
+    // Example mappings (change or remove as needed):
+    // "coffee mug": "Coffee Mug",
+    // "cup": "Cup",
+    "admiral": "butterfly",
+    "ringlet": "butterfly",
+    "monarch": "butterfly",
+    "cabbage butterfly": "butterfly",
+    "lycaenid": "butterfly",
+    "sulphur butterfly": "butterfly",
+  ]
+
+  // Accept an optional category name from the model and safely return a display name.
+  private func displayName(for categoryName: String?) -> String {
+    guard let name = categoryName, !name.isEmpty else { return "--" }
+    return categoryDisplayNameMap[name] ?? name
+  }
+
   // MARK: Computed properties
   var collapsedHeight: CGFloat {
     return normalCellHeight * CGFloat(InferenceConfigurationManager.sharedInstance.maxResults)
@@ -169,7 +191,8 @@ extension BottomSheetViewController: UITableViewDataSource {
     }
     if indexPath.row < classification.categories.count {
       let category = classification.categories[indexPath.row]
-      cell.fieldNameLabel.text = category.categoryName
+      // Use the displayName mapping instead of the raw category name from the model
+      cell.fieldNameLabel.text = displayName(for: category.categoryName)
       cell.infoLabel.text = String(format: "%.2f", category.score)
     } else {
       cell.fieldNameLabel.text = "--"
