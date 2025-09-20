@@ -34,8 +34,8 @@ struct DefaultConstants {
   ]
   static let ovelayColor = UIColor(red: 0, green: 127/255.0, blue: 139/255.0, alpha: 1)
   static let displayFont = UIFont.systemFont(ofSize: 14.0, weight: .medium)
-  static let model: Model = .efficientnetLite0
-  static let delegate: ImageClassifierDelegate = .CPU
+  static let model: Model = .efficientnetLite2
+  static let delegate: ImageClassifierDelegate = .GPU
 }
 
 // MARK: Tflite Model

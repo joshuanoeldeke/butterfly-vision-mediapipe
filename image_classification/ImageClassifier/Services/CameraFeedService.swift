@@ -38,6 +38,11 @@ protocol CameraFeedServiceDelegate: AnyObject {
    */
   func sessionInterruptionEnded()
 
+  /**
+   Notifies delegate that the camera input/device changed.
+   */
+  func cameraInputDidChange(to device: AVCaptureDevice)
+
 }
 
 /**
@@ -80,7 +85,13 @@ class CameraFeedService: NSObject {
   private let session: AVCaptureSession = AVCaptureSession()
   private lazy var videoPreviewLayer = AVCaptureVideoPreviewLayer(session: session)
   private let sessionQueue = DispatchQueue(label: "com.google.mediapipe.CameraFeedService.sessionQueue")
-  private let cameraPosition: AVCaptureDevice.Position = .back
+  private var cameraPosition: AVCaptureDevice.Position = .back
+  // Keep reference to current device input so we can switch cameras later.
+  private var currentVideoDeviceInput: AVCaptureDeviceInput?
+  /// The currently active AVCaptureDevice for the session (if known).
+  var currentDevice: AVCaptureDevice? {
+    return currentVideoDeviceInput?.device
+  }
 
   private var cameraConfigurationStatus: CameraConfigurationStatus = .failed
   private lazy var videoDataOutput = AVCaptureVideoDataOutput()
@@ -260,25 +271,197 @@ class CameraFeedService: NSObject {
    This method tries to an AVCaptureDeviceInput to the current AVCaptureSession.
    */
   private func addVideoDeviceInput() -> Bool {
-
-    /**Tries to get the default back camera.
-     */
-    guard let camera  = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition) else {
+    // Try to get a camera that matches the requested position. Prefer wide-angle if available.
+    guard let camera = selectDevice(for: cameraPosition) else {
       return false
     }
 
     do {
       let videoDeviceInput = try AVCaptureDeviceInput(device: camera)
+      // Remove existing input if present (shouldn't happen during initial config but safe to handle).
+      if let existing = currentVideoDeviceInput {
+        session.removeInput(existing)
+        currentVideoDeviceInput = nil
+      }
+
       if session.canAddInput(videoDeviceInput) {
         session.addInput(videoDeviceInput)
+        currentVideoDeviceInput = videoDeviceInput
         return true
-      }
-      else {
+      } else {
         return false
       }
+    } catch {
+      fatalError("Cannot create video device input: \(error)")
     }
-    catch {
-      fatalError("Cannot create video device input")
+  }
+
+  // MARK: - Device selection & switching
+  /// Returns the first matching device for a position, preferring wide angle, then ultraWide, then telephoto.
+  private func selectDevice(for position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+    // Prefer types in this order for back cameras, and wide angle for front.
+    let deviceTypesOrder: [AVCaptureDevice.DeviceType] = position == .front ? [.builtInWideAngleCamera] : [.builtInWideAngleCamera, .builtInUltraWideCamera, .builtInTelephotoCamera, .builtInDualCamera, .builtInTripleCamera]
+
+    let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypesOrder, mediaType: .video, position: position)
+    // Return the first device from discovery session; DiscoverySession already filters by deviceTypes order.
+    return discoverySession.devices.first ?? AVCaptureDevice.default(for: .video)
+  }
+
+  /// Returns a list of available video devices grouped by position and type.
+  func availableVideoDevices() -> [AVCaptureDevice] {
+    var results: [AVCaptureDevice] = []
+    let allDeviceTypes: [AVCaptureDevice.DeviceType] = [.builtInWideAngleCamera, .builtInUltraWideCamera, .builtInTelephotoCamera, .builtInDualCamera, .builtInTripleCamera]
+    let positions: [AVCaptureDevice.Position] = [.back, .front]
+    var seenKeys = Set<String>()
+    for position in positions {
+      let ds = AVCaptureDevice.DiscoverySession(deviceTypes: allDeviceTypes, mediaType: .video, position: position)
+      for device in ds.devices {
+        // Use deviceType + position to dedupe entries like Dual/Triple when a more specific type exists.
+        let key = "\(device.deviceType.rawValue)-\(device.position.rawValue)"
+        if seenKeys.contains(key) { continue }
+        seenKeys.insert(key)
+        results.append(device)
+      }
+    }
+    return results
+  }
+
+  /// Returns a list of lens options (device, nominalZoom) where nominalZoom is relative to the default wide lens (1.0).
+  /// We try to compute nominal zoom using `activeFormat.videoFieldOfView` when available; otherwise fall back to a mapping by deviceType.
+  func availableLensOptions() -> [(device: AVCaptureDevice, nominalZoom: CGFloat)] {
+    var results: [(AVCaptureDevice, CGFloat)] = []
+    let devices = availableVideoDevices()
+    // Determine a reference FOV (prefer wide angle on the back if present)
+    var referenceFOV: CGFloat? = nil
+    if let ref = devices.first(where: { $0.deviceType == .builtInWideAngleCamera && $0.position == .back }) {
+      referenceFOV = CGFloat(ref.activeFormat.videoFieldOfView)
+    }
+    // fallback to any wide-angle device
+    if referenceFOV == nil, let ref = devices.first(where: { $0.deviceType == .builtInWideAngleCamera }) {
+      referenceFOV = CGFloat(ref.activeFormat.videoFieldOfView)
+    }
+
+    for device in devices {
+      var zoom: CGFloat = 1.0
+      let fov: Float = device.activeFormat.videoFieldOfView
+      if fov > 0, let refF = referenceFOV {
+        // smaller FOV => more zoom, so nominalZoom = refFOV / fov
+        zoom = refF / CGFloat(fov)
+      } else {
+        // fallback mapping by type
+        switch device.deviceType {
+        case .builtInUltraWideCamera:
+          zoom = 0.5
+        case .builtInTelephotoCamera:
+          zoom = 3.0
+        default:
+          zoom = 1.0
+        }
+      }
+      results.append((device, zoom))
+    }
+    // Sort by nominal zoom ascending
+    results.sort(by: { (a: (AVCaptureDevice, CGFloat), b: (AVCaptureDevice, CGFloat)) -> Bool in
+      return a.1 < b.1
+    })
+    return results
+  }
+
+  /// Finds the best device whose nominalZoom is closest to the requestedZoom.
+  func deviceForRequestedZoom(_ requestedZoom: CGFloat, position: AVCaptureDevice.Position? = nil) -> AVCaptureDevice? {
+    let options = availableLensOptions()
+    let filtered = options.filter { position == nil ? true : $0.device.position == position }
+    guard !filtered.isEmpty else { return nil }
+    let best = filtered.min(by: { abs($0.nominalZoom - requestedZoom) < abs($1.nominalZoom - requestedZoom) })
+    return best?.device
+  }
+
+  // MARK: Zoom control helpers
+  /// Returns the current device videoZoomFactor (1.0 default)
+  func currentZoomFactor() -> CGFloat {
+    guard let device = currentDevice else { return 1.0 }
+    return CGFloat(device.videoZoomFactor)
+  }
+
+  /// Returns the supported zoom range for the current device (min, max)
+  func supportedZoomRange() -> (min: CGFloat, max: CGFloat)? {
+    guard let device = currentDevice else { return nil }
+    return (min: CGFloat(device.minAvailableVideoZoomFactor), max: CGFloat(device.maxAvailableVideoZoomFactor))
+  }
+
+  /// Set the device zoom factor (clamped to supported range). Completion on main queue.
+  func setZoomFactor(_ factor: CGFloat, completion: @escaping (Bool) -> Void) {
+    sessionQueue.async {
+      guard let device = self.currentDevice else {
+        DispatchQueue.main.async { completion(false) }
+        return
+      }
+      do {
+        try device.lockForConfiguration()
+  let clamped = max(CGFloat(device.minAvailableVideoZoomFactor), min(factor, CGFloat(device.maxAvailableVideoZoomFactor)))
+  device.videoZoomFactor = clamped
+        device.unlockForConfiguration()
+        DispatchQueue.main.async { completion(true) }
+      } catch {
+        print("[CameraFeedService] failed to set zoom: \(error)")
+        DispatchQueue.main.async { completion(false) }
+      }
+    }
+  }
+
+  /// Switches camera to the provided device (if available). Completion is called on main queue with success flag.
+  func switchCamera(to device: AVCaptureDevice, completion: @escaping (Bool) -> Void) {
+    sessionQueue.async {
+      guard self.session.isRunning || !self.session.isRunning else {
+        // not expected, but bail
+        DispatchQueue.main.async { completion(false) }
+        return
+      }
+
+      self.session.beginConfiguration()
+      // Remove current input
+      if let currentInput = self.currentVideoDeviceInput {
+        self.session.removeInput(currentInput)
+        self.currentVideoDeviceInput = nil
+      }
+
+      do {
+        let newInput = try AVCaptureDeviceInput(device: device)
+        if self.session.canAddInput(newInput) {
+          self.session.addInput(newInput)
+          self.currentVideoDeviceInput = newInput
+          self.cameraPosition = device.position
+        } else {
+          // revert if can't add
+          if let prev = self.currentVideoDeviceInput {
+            self.session.addInput(prev)
+          }
+          self.session.commitConfiguration()
+          DispatchQueue.main.async { completion(false) }
+          return
+        }
+      } catch {
+        print("Error switching camera: \(error)")
+        self.session.commitConfiguration()
+        DispatchQueue.main.async { completion(false) }
+        return
+      }
+
+      // Update mirroring if front camera
+      if let connection = self.videoDataOutput.connection(with: .video) {
+        connection.isVideoMirrored = (self.cameraPosition == .front)
+      }
+
+      self.session.commitConfiguration()
+      // Notify delegate that the input changed
+      if let device = self.currentDevice {
+        DispatchQueue.main.async {
+          self.delegate?.cameraInputDidChange(to: device)
+          completion(true)
+        }
+      } else {
+        DispatchQueue.main.async { completion(true) }
+      }
     }
   }
 
@@ -377,6 +560,13 @@ extension CameraFeedService: AVCaptureVideoDataOutputSampleBufferDelegate {
       if (imageBufferSize == nil) {
         imageBufferSize = CGSize(width: CVPixelBufferGetHeight(imageBuffer), height: CVPixelBufferGetWidth(imageBuffer))
       }
+    // Log which device is currently active for capture (helps confirm ML feed device)
+    if let deviceName = currentDevice?.localizedName {
+      print("[CameraFeedService] captureOutput using device: \(deviceName)")
+    } else {
+      print("[CameraFeedService] captureOutput using unknown device")
+    }
+
     delegate?.didOutput(sampleBuffer: sampleBuffer, orientation: UIImage.Orientation.from(deviceOrientation: UIDevice.current.orientation))
   }
 }

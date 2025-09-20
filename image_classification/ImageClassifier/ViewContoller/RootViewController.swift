@@ -295,5 +295,13 @@ extension RootViewController: BottomSheetViewControllerDelegate {
         weakSelf.view.layoutSubviews()
         weakSelf.updateMediaLibraryControllerUI()
       }
+      // Notify interested controllers about bottom sheet state and size so they can adjust overlays.
+      NotificationCenter.default.post(name: .bottomSheetStateChanged,
+                                      object: nil,
+                                      userInfo: ["isOpen": isOpen, "bottomHeight": self.totalBottomSheetHeight])
     }
+}
+
+extension Notification.Name {
+  static let bottomSheetStateChanged = Notification.Name("BottomSheetStateChangedNotification")
 }
