@@ -261,7 +261,7 @@ class CameraFeedService: NSObject {
    */
   private func addVideoDeviceInput() -> Bool {
 
-    /**Tries to get the default back camera.
+    /**Tries to get the default back camera. (either builtInWideAngleCamera, builtInUltraWideCamera or builtInTelephotoCamera)
      */
     guard let camera  = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition) else {
       return false
