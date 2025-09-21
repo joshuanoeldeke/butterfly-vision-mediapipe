@@ -22,6 +22,14 @@ jobs:
       working-directory: ./image_classification
       run: ./RunScripts/download_models.sh
 
+    - name: Cache CocoaPods
+      uses: actions/cache@v4
+      with:
+        path: Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
+
     - name: Install CocoaPods
       working-directory: ./image_classification
       run: pod install
@@ -44,7 +52,6 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
-    # --- UPLOAD THE BUILT APP ---
     # This step only runs if the build and tests succeed.
     - name: Upload App Artifact
       if: success()
@@ -53,7 +60,6 @@ jobs:
         name: ImageClassifierApp
         path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ImageClassifier.app
 
-    # --- UPLOAD THE TEST RESULTS ---
     # This step runs REGARDLESS of whether the tests passed or failed.
     - name: Upload Test Results
       if: always()
@@ -74,6 +80,14 @@ jobs:
     - name: Download models
       working-directory: ./object_detection
       run: ./RunScripts/download_models.sh
+
+    - name: Cache CocoaPods
+      uses: actions/cache@v4
+      with:
+        path: Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
 
     - name: Install CocoaPods
       working-directory: ./object_detection
@@ -97,7 +111,6 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
-    # --- UPLOAD THE BUILT APP ---
     # This step only runs if the build and tests succeed.
     - name: Upload App Artifact
       if: success()
@@ -106,7 +119,6 @@ jobs:
         name: ObjectDetectorApp
         path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ObjectDetector.app
 
-    # --- UPLOAD THE TEST RESULTS ---
     # This step runs REGARDLESS of whether the tests passed or failed.
     - name: Upload Test Results
       if: always()
