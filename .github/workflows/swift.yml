@@ -17,6 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
+      working-directory: ./image_classification
       run: xcodebuild build -scheme ImageClassifier -sdk iphonesimulator
     - name: Run tests
+      working-directory: ./image_classification
       run: xcodebuild test -scheme ImageClassifier -sdk iphonesimulator
