@@ -2,19 +2,18 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
 
 name: Swift CI
-
 on:
   push:
     branches: [ "testing/joshua" ]
   pull_request:
     branches: [ "testing/joshua" ]
-
+    
 jobs:
 # --- Job for the ImageClassifier project ---
   image-classifier:
     name: Build and Test ImageClassifier
     runs-on: macos-latest
-
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -55,7 +54,8 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download models
-      run: ./face_detector/RunScripts/download_models.sh
+      working-directory: ./face__detector
+      run: ./RunScripts/download_models.sh
       
     - name: Install CocoaPods
       working-directory: ./face_detector
@@ -63,11 +63,21 @@ jobs:
 
     - name: Build FaceDetector
       working-directory: ./face_detector
-      run: xcodebuild build -workspace FaceDetector.xcworkspace -scheme FaceDetector -sdk iphonesimulator
+      run: >-
+        xcodebuild build
+        -workspace FaceDetector.xcworkspace
+        -scheme FaceDetector
+        -sdk iphonesimulator
+        -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
     - name: Test FaceDetector
       working-directory: ./face_detector
-      run: xcodebuild test -workspace FaceDetector.xcworkspace -scheme FaceDetector -sdk iphonesimulator
+      run: >-
+        xcodebuild test
+        -workspace FaceDetector.xcworkspace
+        -scheme FaceDetector
+        -sdk iphonesimulator
+        -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
   # --- Job for the ObjectDetector project ---
   object-detector:
@@ -79,7 +89,8 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download models
-      run: ./object_detection/RunScripts/download_models.sh
+      working-directory: ./object_detection
+      run: ./RunScripts/download_models.sh
 
     - name: Install CocoaPods
       working-directory: ./object_detection
@@ -87,8 +98,18 @@ jobs:
 
     - name: Build ObjectDetector
       working-directory: ./object_detection
-      run: xcodebuild build -workspace ObjectDetector.xcworkspace -scheme ObjectDetector -sdk iphonesimulator
+      run: >-
+        xcodebuild build
+        -workspace ObjectDetector.xcworkspace
+        -scheme ObjectDetector
+        -sdk iphonesimulator
+        -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
     - name: Test ObjectDetector
       working-directory: ./object_detection
-      run: xcodebuild test -workspace ObjectDetector.xcworkspace -scheme ObjectDetector -sdk iphonesimulator
+      run: >-
+        xcodebuild test
+        -workspace ObjectDetector.xcworkspace
+        -scheme ObjectDetector
+        -sdk iphonesimulator
+        -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
