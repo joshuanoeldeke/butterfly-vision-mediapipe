@@ -43,6 +43,12 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
+    - name: Upload App Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ImageClassifierApp
+        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ImageClassifier.app
+
     - name: Test ImageClassifier
       working-directory: ./image_classification
       run: >-
@@ -52,15 +58,6 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
-    # This step only runs if the build and tests succeed.
-    - name: Upload App Artifact
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: ImageClassifierApp
-        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ImageClassifier.app
-
-    # This step runs REGARDLESS of whether the tests passed or failed.
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
@@ -102,6 +99,12 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
+    - name: Upload App Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ObjectDetectorApp
+        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ObjectDetector.app
+
     - name: Test ObjectDetector
       working-directory: ./object_detection
       run: >-
@@ -111,15 +114,6 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
-    # This step only runs if the build and tests succeed.
-    - name: Upload App Artifact
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: ObjectDetectorApp
-        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ObjectDetector.app
-
-    # This step runs REGARDLESS of whether the tests passed or failed.
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
