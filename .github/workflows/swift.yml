@@ -13,7 +13,7 @@ jobs:
   image-classifier:
     name: Build and Test ImageClassifier
     runs-on: macos-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -44,40 +44,23 @@ jobs:
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
-  # --- Job for the FaceDetector project ---
-  face-detector:
-    name: Build and Test FaceDetector
-    runs-on: macos-latest
+    # --- UPLOAD THE BUILT APP ---
+    # This step only runs if the build and tests succeed.
+    - name: Upload App Artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ImageClassifierApp
+        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ImageClassifier.app
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download models
-      working-directory: ./face_detector
-      run: ./RunScripts/download_models.sh
-      
-    - name: Install CocoaPods
-      working-directory: ./face_detector
-      run: pod install
-
-    - name: Build FaceDetector
-      working-directory: ./face_detector
-      run: >-
-        xcodebuild build
-        -workspace FaceDetector.xcworkspace
-        -scheme FaceDetector
-        -sdk iphonesimulator
-        -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
-
-    - name: Test FaceDetector
-      working-directory: ./face_detector
-      run: >-
-        xcodebuild test
-        -workspace FaceDetector.xcworkspace
-        -scheme FaceDetector
-        -sdk iphonesimulator
-        -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+    # --- UPLOAD THE TEST RESULTS ---
+    # This step runs REGARDLESS of whether the tests passed or failed.
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ImageClassifierTestResults
+        path: /Users/runner/Library/Developer/Xcode/DerivedData/ImageClassifier-*/Logs/Test/*.xcresult
 
   # --- Job for the ObjectDetector project ---
   object-detector:
@@ -113,3 +96,56 @@ jobs:
         -scheme ObjectDetector
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+
+    # --- UPLOAD THE BUILT APP ---
+    # This step only runs if the build and tests succeed.
+    - name: Upload App Artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ObjectDetectorApp
+        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ObjectDetector.app
+
+    # --- UPLOAD THE TEST RESULTS ---
+    # This step runs REGARDLESS of whether the tests passed or failed.
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ObjectDetectorTestResults
+        path: /Users/runner/Library/Developer/Xcode/DerivedData/ObjectDetector-*/Logs/Test/*.xcresult
+
+  # # --- Job for the FaceDetector project ---
+  # face-detector:
+  #   name: Build and Test FaceDetector
+  #   runs-on: macos-latest
+
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v4
+
+  #   - name: Download models
+  #     working-directory: ./face_detector
+  #     run: ./RunScripts/download_models.sh
+      
+  #   - name: Install CocoaPods
+  #     working-directory: ./face_detector
+  #     run: pod install
+
+  #   - name: Build FaceDetector
+  #     working-directory: ./face_detector
+  #     run: >-
+  #       xcodebuild build
+  #       -workspace FaceDetector.xcworkspace
+  #       -scheme FaceDetector
+  #       -sdk iphonesimulator
+  #       -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+
+  #   - name: Test FaceDetector
+  #     working-directory: ./face_detector
+  #     run: >-
+  #       xcodebuild test
+  #       -workspace FaceDetector.xcworkspace
+  #       -scheme FaceDetector
+  #       -sdk iphonesimulator
+  #       -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
