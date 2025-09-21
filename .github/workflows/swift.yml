@@ -54,7 +54,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download models
-      working-directory: ./face__detector
+      working-directory: ./face_detector
       run: ./RunScripts/download_models.sh
       
     - name: Install CocoaPods
