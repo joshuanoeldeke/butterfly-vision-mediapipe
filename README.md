@@ -7,3 +7,5 @@ MediaPipe Solutions streamlines on-device ML development and deployment with fle
 * MediaPipe Tasks (low-code): create and deploy custom e2e ML solution pipelines
 * MediaPipe Model Maker (low-code): create custom ML models from advanced solutions
 * MediaPipe Studio (no-code): create, evaluate, debug, benchmark, prototype, deploy advanced production-level solutions
+
+Adding this to test Github Actions Workflow :)
