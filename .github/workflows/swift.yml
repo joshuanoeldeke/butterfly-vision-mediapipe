@@ -42,6 +42,7 @@ jobs:
         -scheme ImageClassifier
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+        -derivedDataPath DerivedData
 
     - name: Upload App Artifact
       uses: actions/upload-artifact@v4
@@ -57,13 +58,14 @@ jobs:
         -scheme ImageClassifier
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+        -derivedDataPath DerivedData
 
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: ImageClassifierTestResults
-        path: /Users/runner/Library/Developer/Xcode/DerivedData/ImageClassifier-*/Logs/Test/*.xcresult
+        path: image_classification/DerivedData/Logs/Test/*.xcresult
 
   # --- Job for the ObjectDetector project ---
   object-detector:
@@ -98,12 +100,13 @@ jobs:
         -scheme ObjectDetector
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+        -derivedDataPath DerivedData
 
     - name: Upload App Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ObjectDetectorApp
-        path: image_classification/DerivedData/Build/Products/Debug-iphonesimulator/ObjectDetector.app
+        path: object_detection/DerivedData/Build/Products/Debug-iphonesimulator/ObjectDetector.app
 
     - name: Test ObjectDetector
       working-directory: ./object_detection
@@ -113,14 +116,15 @@ jobs:
         -scheme ObjectDetector
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+        -derivedDataPath DerivedData
 
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: ObjectDetectorTestResults
-        path: /Users/runner/Library/Developer/Xcode/DerivedData/ObjectDetector-*/Logs/Test/*.xcresult
-
+        path: object_detection/DerivedData/Logs/Test/*.xcresult
+        
   # # --- Job for the FaceDetector project ---
   # face-detector:
   #   name: Build and Test FaceDetector
